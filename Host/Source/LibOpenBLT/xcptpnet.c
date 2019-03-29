@@ -40,6 +40,10 @@
 #include "xcptpnet.h"                       /* XCP TCP/IP transport layer              */
 #include "netaccess.h"                      /* TCP/IP network access module            */
 
+#include <stdio.h>
+
+
+
 
 /****************************************************************************************
 * Function prototypes
@@ -175,11 +179,18 @@ static bool XcpTpNetConnect(void) {
         result = NetAccessConnect(tpNetSettings.address, tpNetSettings.port);
     }
 
-    uint8_t connection_id[] = {0x11, 0x12, 0x11, 0x13,
-                               0x11, 0x14, 0x11, 0x15};
+    uint8_t connection_id[] = TCP_IP_ID;
+
+//    printf("connection successfull : %s\n" , result ? "true" : "false");
+//    (void) fflush(stdout);
 
     if (result) {
-        result = NetAccessSend(connection_id, 8);
+        printf("sending connection_id\n");
+        (void) fflush(stdout);
+        result = NetAccessSend(connection_id, TCP_IP_ID_LENGTH);
+
+//        printf("sent: %s\n" , result ? "true" : "false");
+//        (void) fflush(stdout);
     }
 
 

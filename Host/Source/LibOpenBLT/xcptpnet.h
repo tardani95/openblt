@@ -37,23 +37,25 @@
 extern "C" {
 #endif
 
+#define TCP_IP_ID           {0x11,0x12,0x11,0x13}
+#define TCP_IP_ID_LENGTH    4
+
 /****************************************************************************************
 * Type definitions
 ****************************************************************************************/
 /** \brief Layout of structure with settings specific to the XCP transport layer module
  *         for TCP/IP.
  */
-typedef struct t_xcp_tp_net_settings
-{
-  char const * address;          /**< Target IP-address or hostname on the network.    */
-  uint16_t port;                 /**< TCP port to use.                                 */
+typedef struct t_xcp_tp_net_settings {
+    char const *address;          /**< Target IP-address or hostname on the network.    */
+    uint16_t port;                 /**< TCP port to use.                                 */
 } tXcpTpNetSettings;
 
 
 /***************************************************************************************
 * Function prototypes
 ****************************************************************************************/
-tXcpTransport const * XcpTpNetGetTransport(void);
+tXcpTransport const *XcpTpNetGetTransport(void);
 
 #ifdef __cplusplus
 }

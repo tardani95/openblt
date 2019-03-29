@@ -44,26 +44,30 @@
 /****************************************************************************************
 * Function prototypes
 ****************************************************************************************/
-static void XcpTpNetInit(void const * settings);
-static void XcpTpNetTerminate(void);
-static bool XcpTpNetConnect(void);
-static void XcpTpNetDisconnect(void);
-static bool XcpTpNetSendPacket(tXcpTransportPacket const * txPacket,
-                               tXcpTransportPacket * rxPacket, uint16_t timeout);
+static void XcpTpNetInit(void const *settings);
 
- 
+static void XcpTpNetTerminate(void);
+
+static bool XcpTpNetConnect(void);
+
+static void XcpTpNetDisconnect(void);
+
+static bool XcpTpNetSendPacket(tXcpTransportPacket const *txPacket,
+                               tXcpTransportPacket *rxPacket, uint16_t timeout);
+
+
 /****************************************************************************************
 * Local constant declarations
 ****************************************************************************************/
 /** \brief XCP transport layer structure filled with TCP/IP specifics. */
 static const tXcpTransport netTransport =
-{
-  XcpTpNetInit,
-  XcpTpNetTerminate,
-  XcpTpNetConnect,
-  XcpTpNetDisconnect,
-  XcpTpNetSendPacket
-};
+        {
+                XcpTpNetInit,
+                XcpTpNetTerminate,
+                XcpTpNetConnect,
+                XcpTpNetDisconnect,
+                XcpTpNetSendPacket
+        };
 
 
 /****************************************************************************************
@@ -86,9 +90,8 @@ static uint32_t tpNetCroCounter;
 ** \return    Pointer to transport layer structure.
 **
 ****************************************************************************************/
-tXcpTransport const * XcpTpNetGetTransport(void)
-{
-  return &netTransport;
+tXcpTransport const *XcpTpNetGetTransport(void) {
+    return &netTransport;
 } /*** end of XcpTpNetGetTransport ***/
 
 
@@ -98,39 +101,38 @@ tXcpTransport const * XcpTpNetGetTransport(void)
 ** \return    None.
 **
 ****************************************************************************************/
-static void XcpTpNetInit(void const * settings)
-{
-  char * netAddress;
+static void XcpTpNetInit(void const *settings) {
+    char *netAddress;
 
-  /* Reset transport layer settings. */
-  tpNetSettings.address = NULL;
-  tpNetSettings.port = 0;
+    /* Reset transport layer settings. */
+    tpNetSettings.address = NULL;
+    tpNetSettings.port = 0;
 
-  /* Check parameters. */
-  assert(settings != NULL);
+    /* Check parameters. */
+    assert(settings != NULL);
 
-  /* Only continue with valid parameters. */
-  if (settings != NULL) /*lint !e774 */
-  {
-    /* Shallow copy the transport layer settings for layer usage. */
-    tpNetSettings = *((tXcpTpNetSettings *)settings);
-    /* The address is a pointer and it is not guaranteed that it stays valid so we need
-     * to deep copy this one. note the +1 for '\0' in malloc.
-     */
-    assert(((tXcpTpNetSettings *)settings)->address != NULL);
-    if (((tXcpTpNetSettings *)settings)->address != NULL) /*lint !e774 */
+    /* Only continue with valid parameters. */
+    if (settings != NULL) /*lint !e774 */
     {
-      netAddress = malloc(strlen(((tXcpTpNetSettings *)settings)->address) + 1);
-      assert(netAddress != NULL);
-      if (netAddress != NULL) /*lint !e774 */
-      {
-        strcpy(netAddress, ((tXcpTpNetSettings *)settings)->address);
-        tpNetSettings.address = netAddress;
-      }
+        /* Shallow copy the transport layer settings for layer usage. */
+        tpNetSettings = *((tXcpTpNetSettings *) settings);
+        /* The address is a pointer and it is not guaranteed that it stays valid so we need
+         * to deep copy this one. note the +1 for '\0' in malloc.
+         */
+        assert(((tXcpTpNetSettings *) settings)->address != NULL);
+        if (((tXcpTpNetSettings *) settings)->address != NULL) /*lint !e774 */
+        {
+            netAddress = malloc(strlen(((tXcpTpNetSettings *) settings)->address) + 1);
+            assert(netAddress != NULL);
+            if (netAddress != NULL) /*lint !e774 */
+            {
+                strcpy(netAddress, ((tXcpTpNetSettings *) settings)->address);
+                tpNetSettings.address = netAddress;
+            }
+        }
     }
-  }
-  /* Initialize the network access module. */
-  NetAccessInit();
+    /* Initialize the network access module. */
+    NetAccessInit();
 } /*** end of XcpTpNetInit ***/
 
 
@@ -138,18 +140,16 @@ static void XcpTpNetInit(void const * settings)
 ** \brief     Terminates the transport layer.
 **
 ****************************************************************************************/
-static void XcpTpNetTerminate(void)
-{
-  /* Terminate the network access module. */
-  NetAccessTerminate();
-  /* Release memory that was allocated for storing the network address. */
-  if (tpNetSettings.address != NULL)
-  {
-    free((char *)tpNetSettings.address);
-  }
-  /* Reset transport layer settings. */
-  tpNetSettings.address = NULL;
-  tpNetSettings.port = 0;
+static void XcpTpNetTerminate(void) {
+    /* Terminate the network access module. */
+    NetAccessTerminate();
+    /* Release memory that was allocated for storing the network address. */
+    if (tpNetSettings.address != NULL) {
+        free((char *) tpNetSettings.address);
+    }
+    /* Reset transport layer settings. */
+    tpNetSettings.address = NULL;
+    tpNetSettings.port = 0;
 } /*** end of XcpTpNetTerminate ***/
 
 
@@ -158,25 +158,33 @@ static void XcpTpNetTerminate(void)
 ** \return    True is connected, false otherwise.
 **
 ****************************************************************************************/
-static bool XcpTpNetConnect(void)
-{
-  bool result = false;
+static bool XcpTpNetConnect(void) {
+    bool result = false;
 
-  /* Check transport layer settings. */
-  assert(tpNetSettings.address != NULL);
-  assert(tpNetSettings.port != 0);
+    /* Check transport layer settings. */
+    assert(tpNetSettings.address != NULL);
+    assert(tpNetSettings.port != 0);
 
-  /* Initialize the CRO counter. */
-  tpNetCroCounter = 1;
+    /* Initialize the CRO counter. */
+    tpNetCroCounter = 1;
 
-  /* Only continue if the transport layer settings are valid. */
-  if ( (tpNetSettings.address != NULL) && (tpNetSettings.port != 0) ) /*lint !e774 */
-  {
-    /* Connect via the network access module. */
-    result = NetAccessConnect(tpNetSettings.address, tpNetSettings.port);
-  }
-  /* Give the result back to the caller. */
-  return result;
+    /* Only continue if the transport layer settings are valid. */
+    if ((tpNetSettings.address != NULL) && (tpNetSettings.port != 0)) /*lint !e774 */
+    {
+        /* Connect via the network access module. */
+        result = NetAccessConnect(tpNetSettings.address, tpNetSettings.port);
+    }
+
+    uint8_t connection_id[] = {0x11, 0x12, 0x11, 0x13,
+                               0x11, 0x14, 0x11, 0x15};
+
+    if (result) {
+        result = NetAccessSend(connection_id, 8);
+    }
+
+
+    /* Give the result back to the caller. */
+    return result;
 } /*** end of XcpTpNetConnect ***/
 
 
@@ -184,10 +192,9 @@ static bool XcpTpNetConnect(void)
 ** \brief     Disconnects from the transport layer.
 **
 ****************************************************************************************/
-static void XcpTpNetDisconnect(void)
-{
-  /* Disconnect via the network access module. */
-  NetAccessDisconnect();
+static void XcpTpNetDisconnect(void) {
+    /* Disconnect via the network access module. */
+    NetAccessDisconnect();
 } /*** end of XcpTpNetDisconnect ***/
 
 
@@ -201,90 +208,81 @@ static void XcpTpNetDisconnect(void)
 ** \return    True is successful and a response packet was received, false otherwise.
 **
 ****************************************************************************************/
-static bool XcpTpNetSendPacket(tXcpTransportPacket const * txPacket,
-                               tXcpTransportPacket * rxPacket, uint16_t timeout)
-{
-  bool result = false;
-  uint16_t byteIdx;
-  /* netBuffer is static to lower the stack load. +4 because the CRO counter value is
-   * added at the start of the packet.
-   */
-  static uint8_t netBuffer[XCPLOADER_PACKET_SIZE_MAX + 4];
-
-  /* Check parameters. */
-  assert(txPacket != NULL);
-  assert(rxPacket != NULL);
-
-  /* Only continue with valid parameters. */
-  if ( (txPacket != NULL) && (rxPacket != NULL) ) /*lint !e774 */
-  {
-    /* Set result value to okay and only change it from now on if an error occurred. */
-    result = true;
-    /* Prepare the XCP packet for transmission via TCP/IP. This is basically the same
-     * as the XCP packet data but just the CRO counter of the packet is added to the
-     * first four bytes.
+static bool XcpTpNetSendPacket(tXcpTransportPacket const *txPacket,
+                               tXcpTransportPacket *rxPacket, uint16_t timeout) {
+    bool result = false;
+    uint16_t byteIdx;
+    /* netBuffer is static to lower the stack load. +4 because the CRO counter value is
+     * added at the start of the packet.
      */
-    netBuffer[0] = (uint8_t)tpNetCroCounter;
-    netBuffer[1] = (uint8_t)(tpNetCroCounter >> 8);
-    netBuffer[2] = (uint8_t)(tpNetCroCounter >> 16);
-    netBuffer[3] = (uint8_t)(tpNetCroCounter >> 24);
-    /* Increment the CRO counter for the next packet. */
-    tpNetCroCounter++;
-    /* Copy the actual packet data. */
-    for (byteIdx=0; byteIdx<txPacket->len; byteIdx++)
-    {
-      netBuffer[byteIdx + 4] = txPacket->data[byteIdx];
-    }
-    /* Send the packet. */
-    if (!NetAccessSend(netBuffer, txPacket->len + 4))
-    {
-      result = false;
-    }
+    static uint8_t netBuffer[XCPLOADER_PACKET_SIZE_MAX + 4];
 
-    /* Only continue if the packet was successfully sent. */
-    uint32_t netRxLength = 0;
-    if (result)
+    /* Check parameters. */
+    assert(txPacket != NULL);
+    assert(rxPacket != NULL);
+
+    /* Only continue with valid parameters. */
+    if ((txPacket != NULL) && (rxPacket != NULL)) /*lint !e774 */
     {
-      /* Reset the length of the received packet data. */
-      rxPacket->len = 0;
-      /* Set the maximum allowed length of the response packet. */
-      netRxLength = sizeof(netBuffer)/sizeof(netBuffer[0]);
-      /* Attempt to receive the response within the specified timeout. */
-      if (!NetAccessReceive(netBuffer, &netRxLength, timeout))
-      {
-        result = false;
-      }
+        /* Set result value to okay and only change it from now on if an error occurred. */
+        result = true;
+        /* Prepare the XCP packet for transmission via TCP/IP. This is basically the same
+         * as the XCP packet data but just the CRO counter of the packet is added to the
+         * first four bytes.
+         */
+        netBuffer[0] = (uint8_t) tpNetCroCounter;
+        netBuffer[1] = (uint8_t) (tpNetCroCounter >> 8);
+        netBuffer[2] = (uint8_t) (tpNetCroCounter >> 16);
+        netBuffer[3] = (uint8_t) (tpNetCroCounter >> 24);
+        /* Increment the CRO counter for the next packet. */
+        tpNetCroCounter++;
+        /* Copy the actual packet data. */
+        for (byteIdx = 0; byteIdx < txPacket->len; byteIdx++) {
+            netBuffer[byteIdx + 4] = txPacket->data[byteIdx];
+        }
+        /* Send the packet. */
+        if (!NetAccessSend(netBuffer, txPacket->len + 4)) {
+            result = false;
+        }
+
+        /* Only continue if the packet was successfully sent. */
+        uint32_t netRxLength = 0;
+        if (result) {
+            /* Reset the length of the received packet data. */
+            rxPacket->len = 0;
+            /* Set the maximum allowed length of the response packet. */
+            netRxLength = sizeof(netBuffer) / sizeof(netBuffer[0]);
+            /* Attempt to receive the response within the specified timeout. */
+            if (!NetAccessReceive(netBuffer, &netRxLength, timeout)) {
+                result = false;
+            }
+        }
+        /* Only continue if a response packet was received. */
+        if (result) {
+            /* Validate the response length. It must at least have a DTO counter (32-bits) and
+             * one byte in the response data. It can also not be longer than the maximum
+             * allowed size, based on the size of the buffer.
+             */
+            if ((netRxLength < 5) ||
+                (netRxLength > (sizeof(netBuffer) / sizeof(netBuffer[0])))) {
+                /* Invalid length. */
+                result = false;
+            }
+        }
+        /* Only continue if the response packet has a valid length. */
+        if (result) {
+            /* The first four bytes contain a DTO counter in which we are not really
+             * interested.
+             */
+            rxPacket->len = (uint8_t) (netRxLength - 4);
+            /* Copy the received packet data. */
+            for (byteIdx = 0; byteIdx < rxPacket->len; byteIdx++) {
+                rxPacket->data[byteIdx] = netBuffer[byteIdx + 4];
+            }
+        }
     }
-    /* Only continue if a response packet was received. */
-    if (result)
-    {
-      /* Validate the response length. It must at least have a DTO counter (32-bits) and
-       * one byte in the response data. It can also not be longer than the maximum
-       * allowed size, based on the size of the buffer.
-       */
-      if ( (netRxLength < 5) ||
-           (netRxLength > (sizeof(netBuffer)/sizeof(netBuffer[0]))) )
-      {
-        /* Invalid length. */
-        result = false;
-      }
-    }
-    /* Only continue if the response packet has a valid length. */
-    if (result)
-    {
-      /* The first four bytes contain a DTO counter in which we are not really
-       * interested.
-       */
-      rxPacket->len = (uint8_t)(netRxLength - 4);
-      /* Copy the received packet data. */
-      for (byteIdx=0; byteIdx<rxPacket->len; byteIdx++)
-      {
-        rxPacket->data[byteIdx] = netBuffer[byteIdx + 4];
-      }
-    }
-  }
-  /* Give the result back to the caller. */
-  return result;
+    /* Give the result back to the caller. */
+    return result;
 } /*** end of XcpTpNetSendPacket ***/
 
 

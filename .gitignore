@@ -6,3 +6,5 @@ Host/Source/LibOpenBLT/cmake-build-debug/
 Host/Source/BootCommander/cmake-build-debug/
 
 Host/Source/BootCommander/\.idea/
+
+Host/libopenblt\.dll\.a

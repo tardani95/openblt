@@ -43,8 +43,6 @@
 #include <stdio.h>
 
 
-
-
 /****************************************************************************************
 * Function prototypes
 ****************************************************************************************/
@@ -87,6 +85,9 @@ static tXcpTpNetSettings tpNetSettings;
  */
 static uint32_t tpNetCroCounter;
 
+#define TCP_IP_ID_LENGTH    3
+#define TCP_IP_ID_FILE      "tcpip_id.txt"
+static uint8_t tcp_ip_ID[] = {2,'A','A'};
 
 /***********************************************************************************//**
 ** \brief     Obtains a pointer to the transport layer structure, so that it can be 
@@ -137,6 +138,21 @@ static void XcpTpNetInit(void const *settings) {
     }
     /* Initialize the network access module. */
     NetAccessInit();
+
+    FILE *file;
+
+    file = fopen(TCP_IP_ID_FILE, "r"); // read mode
+
+    if (file == NULL) {
+        perror("Error while opening the file.\n");
+        (void) fflush(stderr);
+    } else{
+        tcp_ip_ID[1] = fgetc(file);
+        tcp_ip_ID[2] = fgetc(file);
+
+        fclose(file);
+    }
+
 } /*** end of XcpTpNetInit ***/
 
 
@@ -179,15 +195,13 @@ static bool XcpTpNetConnect(void) {
         result = NetAccessConnect(tpNetSettings.address, tpNetSettings.port);
     }
 
-    uint8_t connection_id[] = TCP_IP_ID;
-
 //    printf("connection successfull : %s\n" , result ? "true" : "false");
 //    (void) fflush(stdout);
 
     if (result) {
-        printf("sending connection_id\n");
+        printf("sending connection_id: %s\n",tcp_ip_ID);
         (void) fflush(stdout);
-        result = NetAccessSend(connection_id, TCP_IP_ID_LENGTH);
+        result = NetAccessSend(tcp_ip_ID, TCP_IP_ID_LENGTH);
 
 //        printf("sent: %s\n" , result ? "true" : "false");
 //        (void) fflush(stdout);
@@ -242,9 +256,9 @@ static bool XcpTpNetSendPacket(tXcpTransportPacket const *txPacket,
          * first four bytes.
          */
         netBuffer[0] = (uint8_t) tpNetCroCounter;
-        netBuffer[1] = (uint8_t) (tpNetCroCounter >> 8);
-        netBuffer[2] = (uint8_t) (tpNetCroCounter >> 16);
-        netBuffer[3] = (uint8_t) (tpNetCroCounter >> 24);
+        netBuffer[1] = (uint8_t)(tpNetCroCounter >> 8);
+        netBuffer[2] = (uint8_t)(tpNetCroCounter >> 16);
+        netBuffer[3] = (uint8_t)(tpNetCroCounter >> 24);
         /* Increment the CRO counter for the next packet. */
         tpNetCroCounter++;
         /* Copy the actual packet data. */
@@ -285,7 +299,7 @@ static bool XcpTpNetSendPacket(tXcpTransportPacket const *txPacket,
             /* The first four bytes contain a DTO counter in which we are not really
              * interested.
              */
-            rxPacket->len = (uint8_t) (netRxLength - 4);
+            rxPacket->len = (uint8_t)(netRxLength - 4);
             /* Copy the received packet data. */
             for (byteIdx = 0; byteIdx < rxPacket->len; byteIdx++) {
                 rxPacket->data[byteIdx] = netBuffer[byteIdx + 4];

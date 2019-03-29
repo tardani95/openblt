@@ -144,8 +144,9 @@ static void XcpTpNetInit(void const *settings) {
     file = fopen(TCP_IP_ID_FILE, "r"); // read mode
 
     if (file == NULL) {
-        perror("Error while opening the file.\n");
+        perror("Error while opening the file. The tcp_ip_id remained unchanged.");
         (void) fflush(stderr);
+
     } else{
         tcp_ip_ID[1] = fgetc(file);
         tcp_ip_ID[2] = fgetc(file);
